@@ -35,10 +35,12 @@ import { useHandleOnlinestreamProviderExtensions } from "@/app/(main)/onlinestre
 import {
     __onlinestream_audioTrackPreferenceByMediaAtom,
     __onlinestream_dubbedPreferenceByMediaAtom,
+    __onlinestream_qualityPreferenceByMediaAtom,
     __onlinestream_qualityAtom,
     __onlinestream_selectedEpisodeNumberAtom,
     __onlinestream_selectedProviderAtom,
     __onlinestream_selectedServerAtom,
+    OnlinestreamQualityPreference,
     OnlinestreamAudioTrackPreference,
 } from "@/app/(main)/onlinestream/_lib/onlinestream.atoms"
 import { useOnlinestreamAutoProviderCycler } from "@/app/(main)/onlinestream/_lib/use-onlinestream-auto-provider-cycler"
@@ -172,8 +174,6 @@ function findPreferredAudioTrack(audioTracks: HlsAudioTrack[], preference: Onlin
 
 function findPreferredQualityLevel(
     levels: HlsQualityLevel[],
-    preference: OnlinestreamQualityPreference | undefined,
-): HlsQualityLevel | "auto" | null {
     preference: OnlinestreamQualityPreference | undefined,
 ): HlsQualityLevel | "auto" | null {
     if (!preference) return null
@@ -917,6 +917,7 @@ export function OnlinestreamPage({ animeEntry, animeEntryLoading, hideBackButton
                         <VideoCoreProvider id="onlinestream">
                             <div data-onlinestream-video-container className="w-full aspect-video mx-auto border rounded-lg overflow-hidden">
                                 <OnlinestreamAudioTrackPreferenceSync mediaId={mediaId} playbackId={url} />
+                                <OnlinestreamQualityPreferenceSync mediaId={mediaId} playbackId={url} />
                                 <VideoCore
                                     id="onlinestream"
                                     mRef={playerRef}
