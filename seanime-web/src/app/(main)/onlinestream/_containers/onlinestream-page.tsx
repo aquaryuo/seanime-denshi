@@ -170,6 +170,107 @@ function findPreferredAudioTrack(audioTracks: HlsAudioTrack[], preference: Onlin
     return null
 }
 
+function findPreferredQualityLevel(
+    levels: HlsQualityLevel[],
+    preference: OnlinestreamQualityPreference | undefined,
+): HlsQualityLevel | "auto" | null {
+    preference: OnlinestreamQualityPreference | undefined,
+): HlsQualityLevel | "auto" | null {
+    if (!preference) return null
+    if (preference.auto) return "auto"
+
+    if (preference.height != null) {
+        const byHeight = levels.find(level => level.height === preference.height)
+        if (byHeight) return byHeight
+    }
+    if (preference.name) {
+        const name = preference.name.trim().toLowerCase()
+        const byName = levels.find(level => level.name.trim().toLowerCase() === name)
+        if (byName) return byName
+    }
+    return null
+}
+
+function OnlinestreamQualityPreferenceSync(props: { mediaId?: number, playbackId?: string | null }) {
+    const { mediaId, playbackId } = props
+    const qualityLevels = useAtomValue(vc_hlsQualityLevels)
+    const currentQuality = useAtomValue(vc_hlsCurrentQuality)
+    const setHlsQuality = useAtomValue(vc_hlsSetQuality)
+    const [preferenceByMedia, setPreferenceByMedia] = useAtom(__onlinestream_qualityPreferenceByMediaAtom)
+    const preferenceKey = mediaId ? String(mediaId) : null
+    const preference = preferenceKey ? preferenceByMedia[preferenceKey] : undefined
+    const hasAppliedPreferenceRef = React.useRef(false)
+    const applyingLevelRef = React.useRef<number | null>(null)
+    const lastQualityRef = React.useRef<number | null>(null)
+
+    React.useEffect(() => {
+        hasAppliedPreferenceRef.current = false
+        applyingLevelRef.current = null
+        lastQualityRef.current = null
+    }, [playbackId, mediaId])
+
+    // Apply the saved preference once tracks are available
+    React.useEffect(() => {
+        if (!preferenceKey || !qualityLevels.length || !setHlsQuality || hasAppliedPreferenceRef.current) return
+
+        hasAppliedPreferenceRef.current = true
+        const preferred = findPreferredQualityLevel(qualityLevels, preference)
+        if (!preferred) return
+
+        const targetIndex = preferred === "auto" ? -1 : preferred.index
+        if (targetIndex === currentQuality) {
+            lastQualityRef.current = currentQuality
+            return
+        }
+
+        applyingLevelRef.current = targetIndex
+        setHlsQuality(targetIndex)
+    }, [qualityLevels, currentQuality, preference, preferenceKey, setHlsQuality])
+
+    // Save the user's choice (ignoring our own programmatic apply)
+    React.useEffect(() => {
+        if (!preferenceKey || !qualityLevels.length || !hasAppliedPreferenceRef.current) return
+
+        if (applyingLevelRef.current !== null) {
+            if (applyingLevelRef.current === currentQuality) {
+                lastQualityRef.current = currentQuality
+                applyingLevelRef.current = null
+            }
+            return
+        }
+
+        if (lastQualityRef.current === null) {
+            lastQualityRef.current = currentQuality
+            return
+        }
+        if (lastQualityRef.current === currentQuality) return
+        lastQualityRef.current = currentQuality
+
+        let nextPreference: OnlinestreamQualityPreference | null
+        if (currentQuality === -1) {
+            nextPreference = { auto: true }
+        } else {
+            const level = qualityLevels.find(l => l.index === currentQuality)
+            nextPreference = level ? { height: level.height, name: level.name } : null
+        }
+        if (!nextPreference) return
+
+        setPreferenceByMedia(prev => {
+            const current = prev[preferenceKey]
+            if (
+                current?.auto === nextPreference!.auto &&
+                current?.height === nextPreference!.height &&
+                current?.name === nextPreference!.name
+            ) {
+                return prev
+            }
+            return { ...prev, [preferenceKey]: nextPreference! }
+        })
+    }, [qualityLevels, currentQuality, preferenceKey, setPreferenceByMedia])
+
+    return null
+}
+
 function OnlinestreamAudioTrackPreferenceSync(props: { mediaId?: number, playbackId?: string | null }) {
     const { mediaId, playbackId } = props
     const audioTracks = useAtomValue(vc_hlsAudioTracks)
