@@ -11,12 +11,16 @@ import { useSkipData } from "@/app/(main)/_features/video-core/_lib/aniskip"
 import { VideoCore, VideoCoreProvider } from "@/app/(main)/_features/video-core/video-core"
 import {
     HlsAudioTrack,
+    HlsQualityLevel,
     isHLSSrc,
     isNativeVideoExtension,
     isProbablyHls,
     vc_hlsAudioTracks,
+    vc_hlsQualityLevels,
     vc_hlsCurrentAudioTrack,
+    vc_hlsCurrentQuality,
     vc_hlsSetAudioTrack,
+    vc_hlsSetQuality
 } from "@/app/(main)/_features/video-core/video-core-hls"
 import {
     VideoCoreInlineHelpers,
