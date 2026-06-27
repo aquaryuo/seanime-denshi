@@ -9,6 +9,12 @@ export type OnlinestreamAudioTrackPreference = {
     name?: string
 }
 
+export type OnlinestreamQualityPreference = {
+    auto?: boolean
+    height?: number
+    name?: string
+}
+
 export const __onlinestream_dubbedPreferenceByMediaAtom = atomWithStorage<Record<string, boolean>>(
     "sea-onlinestream-dubbed-preference-by-media",
     {},
@@ -18,6 +24,13 @@ export const __onlinestream_dubbedPreferenceByMediaAtom = atomWithStorage<Record
 
 export const __onlinestream_audioTrackPreferenceByMediaAtom = atomWithStorage<Record<string, OnlinestreamAudioTrackPreference>>(
     "sea-onlinestream-audio-track-preference-by-media",
+    {},
+    undefined,
+    { getOnInit: true },
+)
+
+export const __onlinestream_qualityPreferenceByMediaAtom = atomWithStorage<Record<string, OnlinestreamQualityPreference>>(
+    "sea-onlinestream-quality-preference-by-media",
     {},
     undefined,
     { getOnInit: true },
